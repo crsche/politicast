@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const NewsAPIEverything = z.object({
+export const NewsAPIEverythingZod = z.object({
   status: z.string(),
   totalResults: z.number(),
   articles: z.array(
@@ -20,6 +20,8 @@ export const NewsAPIEverything = z.object({
     })
   ),
 });
+
+export type NewsAPIEverything = z.infer<typeof NewsAPIEverythingZod>;
 
 async function getArticles() {
   // See https://newsapi.org/docs/endpoints/everything
@@ -42,7 +44,7 @@ async function getArticles() {
     }
   );
 
-  const parsed = NewsAPIEverything.parse(await response.json());
+  const parsed = NewsAPIEverythingZod.parse(await response.json());
   if (parsed.status !== "ok") {
     throw new Error("News API returned an error");
   }
@@ -51,7 +53,8 @@ async function getArticles() {
 
 export default async function Home() {
   const articles = await getArticles();
-  articles.articles.sort((b, a) => {
+  articles.articles.sort((b, a
+  ) => {
     return a.publishedAt.getTime() - b.publishedAt.getTime();
   });
   return (
