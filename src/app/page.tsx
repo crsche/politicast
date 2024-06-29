@@ -15,7 +15,7 @@ export const NewsAPIEverything = z.object({
       description: z.string().nullable(),
       url: z.string().url(),
       urlToImage: z.string().nullable(),
-      publishedAt: z.string(),
+      publishedAt: z.coerce.date(),
       content: z.string(),
     })
   ),
@@ -35,9 +35,12 @@ async function getArticles() {
   const cache_ms = (24 * 60 * 60 * 1000) / REQUESTS_PER_DAY;
 
   // TODO: Do we need to change the query?
-  const response = await fetch(`${NEWSAPI_ENDPONT}?q=${QUERY}&language=en&apiKey=${AUTH}`, {
-    next: { revalidate: cache_ms },
-  });
+  const response = await fetch(
+    `${NEWSAPI_ENDPONT}?q=${QUERY}&language=en&apiKey=${AUTH}`,
+    {
+      next: { revalidate: cache_ms },
+    }
+  );
 
   const parsed = NewsAPIEverything.parse(await response.json());
   if (parsed.status !== "ok") {
@@ -48,10 +51,15 @@ async function getArticles() {
 
 export default async function Home() {
   const articles = await getArticles();
+  articles.articles.sort((b, a) => {
+    return a.publishedAt.getTime() - b.publishedAt.getTime();
+  });
   return (
     <main>
       {articles.articles.map((article) => (
-        <p key={article.source.id}>{article.title}</p>
+        <p key={article.source.id}>
+          {article.publishedAt.toDateString()} - {article.title}
+        </p>
       ))}
     </main>
   );
